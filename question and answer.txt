@@ -1,0 +1,33 @@
+1. How does changing the department dropdown cause the jobs list to re-fetch?
+
+	When I change the department dropdown, the selected department is stored in Zustand. The `useJobs` hook gets the updated filter value and creates a new query key with that filter. TanStack Query detects that the query key has changed and fetches the jobs again from the API. The updated jobs list is then displayed.
+
+Flow:
+=====
+Department dropdown → Zustand store → `useJobs` → New query key → API request → Updated jobs list
+
+2. What does `z.infer<typeof JobSchema>` give you? Why is it better than writing a separate TypeScript interface?
+
+	`z.infer<typeof JobSchema>` creates a TypeScript type directly from the Zod schema. It means I don't need to write the same form fields again in a separate interface. If I change the Zod schema, the TypeScript type also stays in sync. This reduces duplicate code and keeps validation and types consistent.
+
+3. What happens in TanStack Query when you call `invalidateQueries` after adding a new job?
+
+	After adding a new job, `invalidateQueries` tells TanStack Query that the existing jobs data is outdated. TanStack Query then fetches the latest jobs data again, so the newly added job appears in the list.
+
+	If I forget to call `invalidateQueries`, the new job may be added successfully to the database, but the jobs list can still show the old cached data until it is fetched again.
+
+4. Why does including the filters in `['jobs', filters]` matter?
+
+T	he filters are included in the query key so TanStack Query can identify each filter combination as a different query.
+
+For example:
+===============
+	`['jobs', { department: 'Engineering' }]`
+
+and
+
+	`['jobs', { department: 'Sales' }]`
+
+are treated as different queries.
+
+	If I use only `['jobs']` for all filter variations, TanStack Query treats them as the same query. This can cause the application to use the wrong cached data instead of fetching and storing the correct data for each filter.
